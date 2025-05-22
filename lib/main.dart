@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:homepage/Views/LoginScreen.dart';
 import 'package:homepage/Views/page.dart';
 import 'package:homepage/config/supbase_config.dart';
 import 'package:homepage/providers/favorite_provider.dart';
