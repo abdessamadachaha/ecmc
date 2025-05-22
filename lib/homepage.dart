@@ -7,8 +7,10 @@ import 'package:homepage/Views/favoriteScreen.dart';
 import 'package:homepage/models/person.dart';
 
 class Homepage extends StatefulWidget {
+  final Person person;
+
   
-  const Homepage({super.key});
+  Homepage({super.key, required this.person});
 
   @override
   State<Homepage> createState() => _HomepageState();
@@ -17,7 +19,6 @@ class Homepage extends StatefulWidget {
 class _HomepageState extends State<Homepage> {
   Color tapIcon = Colors.black;
   int selectIndex = 0;
-  final pages = [PageCategory(), FacoriteScreen(), Cartdetails(), PageCategory()];
   final items = [
     Icon(LucideIcons.house,color: Colors.white,  size: 24,),
     Icon(LucideIcons.heart,color: Colors.white, size: 24,),
@@ -27,6 +28,8 @@ class _HomepageState extends State<Homepage> {
   ];
   @override
   Widget build(BuildContext context) {
+    final pages = [PageCategory(person: widget.person,), FacoriteScreen(), Cartdetails()];
+
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.white,

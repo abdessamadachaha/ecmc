@@ -7,12 +7,14 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PageCategory extends StatefulWidget {
+  Person person;
+   PageCategory({super.key, required this.person});
+
   @override
   State<PageCategory> createState() => _PageCategoryState();
 }
 
 class _PageCategoryState extends State<PageCategory> {
- 
   final List<String> categories = [
     'All Products',
     'Clothes',
@@ -35,10 +37,7 @@ class _PageCategoryState extends State<PageCategory> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
   }
-
-  
 
   Future<List<dynamic>> fetchProducts() async {
     final supabase = Supabase.instance.client;
@@ -73,14 +72,14 @@ class _PageCategoryState extends State<PageCategory> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'customer!.name',
+                    widget.person.name,
                     style: TextStyle(
                       fontSize: 18,
                       fontStyle: FontStyle.normal,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  CircleAvatar(radius: 20, backgroundImage: NetworkImage('')),
+                  CircleAvatar(radius: 20, backgroundImage: NetworkImage(widget.person.image??'')),
                 ],
               ),
             ),
