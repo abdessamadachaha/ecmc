@@ -37,6 +37,9 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:homepage/homepage.dart';
+import 'package:homepage/providers/cart_provider.dart';
+import 'package:homepage/providers/favorite_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // 1️⃣ Your Supabase config
@@ -66,30 +69,36 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Your App Name',
-      debugShowCheckedModeBanner: false,
-
-      // 3️⃣ Start your user at the login screen:
-      initialRoute: '/login',
-
-      // 4️⃣ Map each route name to its widget:
-      routes: {
-        '/login':          (_) => const LoginPage(),
-        '/signup':         (_) => const SignUpPage(),
-        '/forgot-password':(_) => const ForgotPasswordPage(),
-        '/home':           (_) => const Homepage(),
-        '/cart-details':   (_) => const Cartdetails(),
-        '/favorites':      (_) => const FacoriteScreen(),
-        '/page':           (_) =>  PageCategory (),
-      },
-
-      // Optionally handle unknown routes:
-      onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (_) => const LoginPage(),
-        );
-      },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => FavoriteProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider())
+      ],
+      child: MaterialApp(
+        title: 'Your App Name',
+        debugShowCheckedModeBanner: false,
+      
+        // 3️⃣ Start your user at the login screen:
+        initialRoute: '/login',
+      
+        // 4️⃣ Map each route name to its widget:
+        routes: {
+          '/login':          (_) => const LoginPage(),
+          '/signup':         (_) => const SignUpPage(),
+          '/forgot-password':(_) => const ForgotPasswordPage(),
+          '/home':           (_) => const Homepage(),
+          '/cart-details':   (_) => const Cartdetails(),
+          '/favorites':      (_) => const FacoriteScreen(),
+          '/page':           (_) =>  PageCategory (),
+        },
+      
+        // Optionally handle unknown routes:
+        onUnknownRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (_) => const LoginPage(),
+          );
+        },
+      ),
     );
   }
 }

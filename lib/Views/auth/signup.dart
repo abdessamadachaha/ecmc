@@ -19,31 +19,40 @@ class _SignUpPageState extends State<SignUpPage> {
   String error = '';
 
   Future<void> _signup() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() { isLoading = true; error = ''; });
-    try {
-      final res = await Supabase.instance.client.auth.signUp(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-      if (res.user != null) {
-        await Supabase.instance.client.from('users').upsert({
-          'id': res.user!.id,
-          'name': nameController.text.trim(),
-          'phone': phoneController.text.trim(),
-          'email': emailController.text.trim(),
-          'created_at': DateTime.now().toIso8601String(),
-        });
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    } on AuthException catch (e) {
-      setState(() => error = e.message);
-    } catch (_) {
-      setState(() => error = 'Signup failed. Please try again.');
-    } finally {
-      setState(() { isLoading = false; });
+  if (!_formKey.currentState!.validate()) return;
+  setState(() {
+    isLoading = true;
+    error = '';
+  });
+
+  try {
+    final res = await Supabase.instance.client.auth.signUp(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+
+    final user = res.user;
+    if (user != null) {
+      await Supabase.instance.client.from('users').insert({
+        'id': user.id,
+        'name': nameController.text.trim(),
+        'phone': phoneController.text.trim(),
+        'email': emailController.text.trim(),
+        'role': 'customer', // ou 'seller', selon ton app
+        'image': '', // à remplir si tu ajoutes une image
+      });
+      Navigator.pushReplacementNamed(context, '/login');
     }
+  } on AuthException catch (e) {
+    setState(() => error = e.message);
+  } catch (e) {
+    setState(() => error = 'Signup failed. Please try again.');
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
