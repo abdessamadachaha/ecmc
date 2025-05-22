@@ -4,6 +4,7 @@ class Product {
   final int price;
   final String description;
   final String condition;
+  final int quantity;
   final String idSeller;
 
   Product({
@@ -12,8 +13,7 @@ class Product {
     required this.price,
     required this.description,
     required this.condition,
+    required this.quantity,
     required this.idSeller,
   });
-  
-  
 }

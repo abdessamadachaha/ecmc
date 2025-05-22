@@ -37,6 +37,7 @@ class _FacoriteScreenState extends State<FacoriteScreen> {
                         motion: const ScrollMotion(),
                         children: [
                           SlidableAction(
+                            borderRadius: BorderRadius.circular(5.0),
                             onPressed: (context) {
                               finalList.removeAt(index);
                               setState(() {
@@ -51,7 +52,10 @@ class _FacoriteScreenState extends State<FacoriteScreen> {
                         ],
                       ),
                       child: ListTile(
-                        tileColor: Colors.white70,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5.0)
+                        ),
+                        tileColor: Colors.lightGreenAccent,
                       
                         title: Text(
                           finalList[index].nameOfProduct,

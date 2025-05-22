@@ -170,6 +170,7 @@ class _PageCategoryState extends State<PageCategory> {
                                         price: product['price'],
                                         description: product['description'],
                                         condition: product['condition'],
+                                        quantity: product['quantity'],
                                         idSeller: product['id_seller'],
                                       ),
                                     ),

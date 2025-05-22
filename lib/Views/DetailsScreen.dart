@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:homepage/Views/CartDetails.dart';
 import 'package:homepage/Widgets/Button.dart';
+import 'package:homepage/models/CartItem.dart';
 import 'package:homepage/models/product.dart';
 import 'package:homepage/models/person.dart';
+import 'package:homepage/providers/cart_provider.dart';
 import 'package:homepage/providers/favorite_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -45,10 +48,10 @@ class _DetailsscreenState extends State<Detailsscreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final provider = FavoriteProvider.of(context);
+    final providerCart = CartProvider.of(context);
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 236, 236, 236),
@@ -56,16 +59,17 @@ class _DetailsscreenState extends State<Detailsscreen> {
         backgroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: Icon(
-            LucideIcons.chevron_left
-          ),
+          icon: Icon(LucideIcons.chevron_left),
         ),
         actions: [
           IconButton(
-            onPressed: ()=>provider.toggleProduct(widget.product),
+            onPressed: () => provider.toggleProduct(widget.product),
             icon: Icon(
-              provider.isExist(widget.product)?Icons.favorite : Icons.favorite_border_outlined, color: Colors.red,
-          ),
+              provider.isExist(widget.product)
+                  ? Icons.favorite
+                  : Icons.favorite_border_outlined,
+              color: Colors.red,
+            ),
           ),
         ],
 
@@ -79,7 +83,6 @@ class _DetailsscreenState extends State<Detailsscreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          
             Image.network(
               widget.product.image,
               fit: BoxFit.cover,
@@ -119,7 +122,9 @@ class _DetailsscreenState extends State<Detailsscreen> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 18.0),
                     child: Text(
-                      widget.product.description.isNotEmpty ? widget.product.description : '',
+                      widget.product.description.isNotEmpty
+                          ? widget.product.description
+                          : '',
                       style: TextStyle(
                         fontSize: 14.0,
                         fontStyle: FontStyle.italic,
@@ -156,7 +161,24 @@ class _DetailsscreenState extends State<Detailsscreen> {
                             ),
                   ),
 
-                  Button(text: 'Add To Cart'),
+                  Button(
+                    text: 'Add To Cart',
+                    onTap: () {
+                      providerCart.toggleProduct(
+                        Cartitem(product: widget.product, quantity: 0),
+                      );
+                       ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${widget.product.nameOfProduct} added to cart'),
+                        duration: const Duration(seconds: 2),
+                        backgroundColor: Colors.green,
+                        behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                      
+                     
+                    },
+                  ),
                 ],
               ),
             ),
