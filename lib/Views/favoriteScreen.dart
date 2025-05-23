@@ -38,12 +38,14 @@ class _FacoriteScreenState extends State<FacoriteScreen> {
                         children: [
                           SlidableAction(
                             borderRadius: BorderRadius.circular(5.0),
-                            onPressed: (context) {
-                              finalList.removeAt(index);
+                            onPressed: (context) async {
+                              final product = finalList[index];
+                              await provider.removeFromDatabase(product); // حذف من Supabase
                               setState(() {
-                                
+                                finalList.removeAt(index); // حذف من الواجهة
                               });
                             },
+
                             backgroundColor: Colors.red,
                             foregroundColor: Colors.white,
                             icon: LucideIcons.trash_2,

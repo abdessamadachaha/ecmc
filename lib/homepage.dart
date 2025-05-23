@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:homepage/Views/CartDetails.dart';
+import 'package:homepage/Views/ProfileScreen.dart';
 import 'package:homepage/Views/page.dart';
 import 'package:homepage/Views/favoriteScreen.dart';
 import 'package:homepage/models/person.dart';
@@ -28,7 +29,7 @@ class _HomepageState extends State<Homepage> {
   ];
   @override
   Widget build(BuildContext context) {
-    final pages = [PageCategory(person: widget.person,), FacoriteScreen(), Cartdetails()];
+    final pages = [PageCategory(person: widget.person,), FacoriteScreen(), Cartdetails(), ProfileScreen(person: widget.person)];
 
     return Scaffold(
       extendBody: true,

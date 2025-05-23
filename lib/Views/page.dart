@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homepage/Views/DetailsScreen.dart';
+import 'package:homepage/Views/ProfileScreen.dart';
 import 'package:homepage/models/person.dart';
 import 'package:homepage/models/product.dart';
 import 'package:homepage/providers/favorite_provider.dart';
@@ -8,7 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PageCategory extends StatefulWidget {
   Person person;
-   PageCategory({super.key, required this.person});
+  PageCategory({super.key, required this.person});
 
   @override
   State<PageCategory> createState() => _PageCategoryState();
@@ -79,7 +80,17 @@ class _PageCategoryState extends State<PageCategory> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  CircleAvatar(radius: 20, backgroundImage: NetworkImage(widget.person.image??'')),
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileScreen(person: widget.person),
+                      ),
+                    ),                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundImage: NetworkImage(widget.person.image ?? ''),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -164,6 +175,7 @@ class _PageCategoryState extends State<PageCategory> {
                                 builder:
                                     (context) => Detailsscreen(
                                       product: Product(
+                                        id: product['id'],
                                         nameOfProduct: product['name'],
                                         image: product['image'],
                                         price: product['price'],

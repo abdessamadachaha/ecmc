@@ -20,37 +20,47 @@ class _LoginPageState extends State<LoginPage> {
   String error = '';
 
 
+Future<void> _login() async {
+  setState(() {
+    isLoading = true;
+    error = '';
+  });
 
-     Future<void> _login() async {
-    try {
-      final authResponse = await Supabase.instance.client.auth.signInWithPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+  try {
+    final authResponse = await Supabase.instance.client.auth.signInWithPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
 
-      final user = authResponse.user;
-      if (user == null) {
-        throw Exception("login failed");
-      }
+    final user = authResponse.user;
 
-      final userData = await Supabase.instance.client
-          .from('users')
-          .select()
-          .eq('id', user.id)
-          .single();
-
-      final person = Person.fromMap(userData);
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => Homepage(person: person)),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login error: ${e.toString()}')),
-      );
+    if (user == null) {
+      throw Exception("Login failed: user is null");
     }
+
+    final userData = await Supabase.instance.client
+        .from('users')
+        .select()
+        .eq('id', user.id)
+        .single();
+
+    final person = Person.fromMap(userData);
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => Homepage(person: person)),
+    );
+  } catch (e) {
+    setState(() {
+      error = 'Login error: ${e.toString()}';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error)),
+    );
+  } finally {
+    setState(() => isLoading = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {

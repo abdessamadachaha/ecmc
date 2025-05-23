@@ -1,4 +1,5 @@
 class Product {
+  final String id;
   final String nameOfProduct;
   final String image;
   final int price;
@@ -8,6 +9,7 @@ class Product {
   final String idSeller;
 
   Product({
+    required this.id,
     required this.nameOfProduct,
     required this.image,
     required this.price,
@@ -16,4 +18,11 @@ class Product {
     required this.quantity,
     required this.idSeller,
   });
+
+    @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is Product && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
