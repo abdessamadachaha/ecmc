@@ -169,22 +169,21 @@ class _DetailsscreenState extends State<Detailsscreen> {
 
                   Button(
                     text: 'Add To Cart',
-                    onTap: () {
-                      providerCart.toggleProduct(
-                        Cartitem(product: widget.product, quantity: 0),
+                    onTap: () async {
+                      await providerCart.addToCart(
+                        Cartitem(product: widget.product, quantity: 1),
                       );
-                       ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${widget.product.nameOfProduct} added to cart'),
-                        duration: const Duration(seconds: 2),
-                        backgroundColor: Colors.green,
-                        behavior: SnackBarBehavior.floating,
-                  ),
-                );
-                      
-                     
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${widget.product.nameOfProduct} Added to cart'),
+                          duration: const Duration(seconds: 2),
+                          backgroundColor: Colors.green,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
                     },
                   ),
+
                 ],
               ),
             ),

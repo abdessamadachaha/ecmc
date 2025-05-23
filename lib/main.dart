@@ -87,7 +87,7 @@ class MyApp extends StatelessWidget {
           '/signup':         (_) => const SignUpPage(),
           '/forgot-password':(_) => const ForgotPasswordPage(),
           '/cart-details':   (_) => const Cartdetails(),
-          '/favorites':      (_) => const FacoriteScreen(),
+          '/favorites':      (_) => const FavoriteScreen(),
         },
       
         // Optionally handle unknown routes:
