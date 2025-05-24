@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:homepage/Views/page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:homepage/homepage.dart';
-import 'package:homepage/models/person.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homepage/models/person.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -19,8 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   bool isLoading = false;
   String error = '';
 
-
-Future<void> _login() async {
+  Future<void> _login() async {
   setState(() {
     isLoading = true;
     error = '';
@@ -33,10 +31,7 @@ Future<void> _login() async {
     );
 
     final user = authResponse.user;
-
-    if (user == null) {
-      throw Exception("Login failed: user is null");
-    }
+    if (user == null) throw Exception("Login failed: user is null");
 
     final userData = await Supabase.instance.client
         .from('users')
@@ -44,12 +39,24 @@ Future<void> _login() async {
         .eq('id', user.id)
         .single();
 
+
+    final role = userData['role'];
+    print('🔐 Logged in as: $role');
     final person = Person.fromMap(userData);
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => Homepage(person: person)),
-    );
+    if (role == 'customer') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => Homepage(person: person)),
+      );
+    } else if (role == 'seller') {
+      Navigator.pushReplacementNamed(context, '/product-list');
+    } else if (role == 'admin') {
+      Navigator.pushReplacementNamed(context, '/admin-dashboard');
+    } else {
+      throw Exception('Unknown role: $role');
+    }
+
   } catch (e) {
     setState(() {
       error = 'Login error: ${e.toString()}';
@@ -61,6 +68,7 @@ Future<void> _login() async {
     setState(() => isLoading = false);
   }
 }
+
 
   @override
   Widget build(BuildContext context) {
@@ -81,9 +89,8 @@ Future<void> _login() async {
               ),
             ),
 
-            SizedBox(height: 40,),
+            const SizedBox(height: 40),
 
-            // Header
             Center(
               child: const Text(
                 'Welcome!',
@@ -95,21 +102,13 @@ Future<void> _login() async {
               ),
             ),
             const SizedBox(height: 32),
-            
-            // Form
+
             Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Email Field
-                  const Text(
-                    'Email Address',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
+                  const Text('Email Address', style: TextStyle(fontSize: 16, color: Colors.black87)),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: emailController,
@@ -119,10 +118,7 @@ Future<void> _login() async {
                         borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(color: Colors.grey),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (v) {
@@ -132,15 +128,8 @@ Future<void> _login() async {
                     },
                   ),
                   const SizedBox(height: 24),
-                  
-                  // Password Field
-                  const Text(
-                    'Password',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
+
+                  const Text('Password', style: TextStyle(fontSize: 16, color: Colors.black87)),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: passwordController,
@@ -151,10 +140,7 @@ Future<void> _login() async {
                         borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(color: Colors.grey),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -166,23 +152,16 @@ Future<void> _login() async {
                     validator: (v) => (v == null || v.length < 6) ? 'At least 6 chars' : null,
                   ),
                   const SizedBox(height: 8),
-                  
-                  // Recovery Password Link
+
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
-                      child: const Text(
-                        'Recovery Password',
-                        style: TextStyle(
-                          color: Colors.grey,
-                        ),
-                      ),
+                      child: const Text('Recovery Password', style: TextStyle(color: Colors.grey)),
                     ),
                   ),
                   const SizedBox(height: 32),
-                  
-                  // Sign In Button
+
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -196,40 +175,22 @@ Future<void> _login() async {
                       ),
                       child: isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Sign In',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
-                            ),
+                          : const Text('Sign In', style: TextStyle(fontSize: 16, color: Colors.white)),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
-                  // Create Account Link
+
                   Center(
                     child: TextButton(
                       onPressed: () => Navigator.pushNamed(context, '/signup'),
-                      child: const Text(
-                        'New User? Create Account',
-                        style: TextStyle(
-                          color: Colors.black,
-                        ),
-                      ),
+                      child: const Text('New User? Create Account', style: TextStyle(color: Colors.black)),
                     ),
                   ),
-                  
-                  // Error Message
+
                   if (error.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
-                      child: Text(
-                        error,
-                        style: const TextStyle(
-                          color: Colors.red,
-                        ),
-                      ),
+                      child: Text(error, style: const TextStyle(color: Colors.red)),
                     ),
                 ],
               ),
