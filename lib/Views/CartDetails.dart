@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:homepage/Views/orderPage.dart';
 import 'package:homepage/models/CartItem.dart';
 import 'package:homepage/providers/cart_provider.dart';
 import 'package:provider/provider.dart';
@@ -51,10 +52,6 @@ class _CartDetailsState extends State<CartDetails> {
           ),
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(LucideIcons.chevron_left, color: Colors.black54),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -103,14 +100,7 @@ class _CartDetailsState extends State<CartDetails> {
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepOrange,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text('Continue Shopping'),
-          ),
+         
         ],
       ),
     );
@@ -340,19 +330,33 @@ class _CartDetailsState extends State<CartDetails> {
   }
 
   Future<void> _checkout() async {
-    setState(() => _isProcessing = true);
-    try {
-      // Implement your checkout logic here
-      await Future.delayed(Duration(seconds: 1)); // Simulate checkout
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Checkout successful!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Checkout failed: ${e.toString()}')),
-      );
-    } finally {
-      setState(() => _isProcessing = false);
-    }
+  final provider = Provider.of<CartProvider>(context, listen: false);
+  final cartItems = provider.cart;
+  final totalAmount = cartItems.fold(
+    0.0,
+    (sum, item) => sum + (item.product.price * item.quantity),
+  );
+
+  setState(() => _isProcessing = true);
+
+  try {
+    // الانتقال إلى صفحة الدفع
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderPage(
+          cartItems: cartItems,
+          totalAmount: totalAmount,
+        ),
+      ),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Checkout failed: ${e.toString()}')),
+    );
+  } finally {
+    setState(() => _isProcessing = false);
   }
+}
+
 }
