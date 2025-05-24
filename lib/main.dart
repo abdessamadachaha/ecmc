@@ -36,6 +36,13 @@
 // }
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:homepage/Views/ProfileScreen.dart';
+import 'package:homepage/Views/admin/dashbord.dart';
+import 'package:homepage/Views/auth/auth_redirect.dart';
+import 'package:homepage/Views/seller/ProductList.dart';
+import 'package:homepage/Views/seller/ProfilePage.dart';
+import 'package:homepage/Views/seller/SellerOrdersPage.dart';
+import 'package:homepage/Views/seller/addProdact.dart';
 import 'package:homepage/homepage.dart';
 import 'package:homepage/providers/cart_provider.dart';
 import 'package:homepage/providers/favorite_provider.dart';
@@ -80,14 +87,17 @@ class MyApp extends StatelessWidget {
       
         // 3️⃣ Start your user at the login screen:
         initialRoute: '/login',
-      
-        // 4️⃣ Map each route name to its widget:
         routes: {
-          '/login':          (_) => const LoginPage(),
-          '/signup':         (_) => const SignUpPage(),
-          '/forgot-password':(_) => const ForgotPasswordPage(),
-          '/cart-details':   (_) => const CartDetails(),
-          '/favorites':      (_) => const FavoriteScreen(),
+          '/redirect': (_) => const AuthRedirectPage(),
+          '/login': (_) => const LoginPage(),
+          '/signup': (_) => const SignUpPage(),
+          '/forgot-password': (_) => const ForgotPasswordPage(),
+          // '/home': (_) =>  const Homepage(),
+          '/product-list': (_) => const ProductListScreen(),
+          '/add': (_) => const AddProductScreen(),
+          '/profile': (_) => const ProfilePage(),
+          '/orders': (_) => const SellerOrdersPage(),
+          '/admin-dashboard': (_) => const AdminDashboard(),
         },
       
         // Optionally handle unknown routes:

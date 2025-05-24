@@ -44,6 +44,8 @@ dependencies:
   flutter_svg: ^2.0.7  # or latest version
   image_picker: ^1.0.4
   path: ^1.8.3
+  # Utils
+  uuid: ^3.0.6
 
 
 
