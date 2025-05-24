@@ -86,7 +86,7 @@ class MyApp extends StatelessWidget {
           '/login':          (_) => const LoginPage(),
           '/signup':         (_) => const SignUpPage(),
           '/forgot-password':(_) => const ForgotPasswordPage(),
-          '/cart-details':   (_) => const Cartdetails(),
+          '/cart-details':   (_) => const CartDetails(),
           '/favorites':      (_) => const FavoriteScreen(),
         },
       

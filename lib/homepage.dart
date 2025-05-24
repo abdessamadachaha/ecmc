@@ -29,7 +29,7 @@ class _HomepageState extends State<Homepage> {
   ];
   @override
   Widget build(BuildContext context) {
-    final pages = [CategoryPage(person: widget.person,), FavoriteScreen(), Cartdetails(), ProfileScreen(person: widget.person)];
+    final pages = [CategoryPage(person: widget.person,), FavoriteScreen(), CartDetails(), ProfileScreen(person: widget.person)];
 
     return Scaffold(
       extendBody: true,

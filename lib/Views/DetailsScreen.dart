@@ -73,10 +73,9 @@ class _DetailsscreenState extends State<Detailsscreen> {
                       : Icons.favorite_border_outlined,
                   color: Colors.red,
                 ),
-    );
-  },
-)
-
+              );
+            },
+          ),
         ],
 
         title: Text(
