@@ -7,6 +7,7 @@ import 'package:homepage/models/product.dart';
 import 'package:homepage/models/person.dart';
 import 'package:homepage/providers/cart_provider.dart';
 import 'package:homepage/providers/favorite_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Detailsscreen extends StatefulWidget {
@@ -62,14 +63,18 @@ class _DetailsscreenState extends State<Detailsscreen> {
           icon: Icon(LucideIcons.chevron_left),
         ),
         actions: [
-          IconButton(
-            onPressed: () => provider.toggleProduct(widget.product),
-            icon: Icon(
-              provider.isExist(widget.product)
-                  ? Icons.favorite
-                  : Icons.favorite_border_outlined,
-              color: Colors.red,
-            ),
+          Consumer<FavoriteProvider>(
+            builder: (context, provider, _) {
+              return IconButton(
+                onPressed: () => provider.toggleProduct(widget.product),
+                icon: Icon(
+                  provider.isExist(widget.product)
+                      ? Icons.favorite
+                      : Icons.favorite_border_outlined,
+                  color: Colors.red,
+                ),
+              );
+            },
           ),
         ],
 
@@ -163,22 +168,21 @@ class _DetailsscreenState extends State<Detailsscreen> {
 
                   Button(
                     text: 'Add To Cart',
-                    onTap: () {
-                      providerCart.toggleProduct(
-                        Cartitem(product: widget.product, quantity: 0),
+                    onTap: () async {
+                      await providerCart.addToCart(
+                        Cartitem(product: widget.product, quantity: 1),
                       );
-                       ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${widget.product.nameOfProduct} added to cart'),
-                        duration: const Duration(seconds: 2),
-                        backgroundColor: Colors.green,
-                        behavior: SnackBarBehavior.floating,
-                  ),
-                );
-                      
-                     
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${widget.product.nameOfProduct} Added to cart'),
+                          duration: const Duration(seconds: 2),
+                          backgroundColor: Colors.green,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
                     },
                   ),
+
                 ],
               ),
             ),

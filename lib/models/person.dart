@@ -5,7 +5,8 @@ class Person {
   final String password;
   final String phone;
   final String role;
-  final String? image; 
+  String? image; 
+
 
   Person({
     required this.id,
