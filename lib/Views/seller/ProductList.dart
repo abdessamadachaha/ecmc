@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:homepage/Views/seller/addProdact.dart';
-import 'package:homepage/Views/seller/editProduct.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'SellerScaffold.dart'; // ✅ Make sure the path is correct
+import 'EditProduct.dart';
+import 'SellerScaffold.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({Key? key}) : super(key: key);
@@ -12,6 +12,7 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
+  // ▼▼▼ KEEP ALL YOUR EXISTING CODE ▼▼▼
   final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _filteredProducts = [];
@@ -96,10 +97,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
       );
     }
   }
+  // ▲▲▲ KEEP ALL YOUR EXISTING CODE ▲▲▲
 
   @override
   Widget build(BuildContext context) {
+
     return SellerScaffold(
+
+
       title: 'Product Inventory',
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.black,
@@ -114,18 +119,21 @@ class _ProductListScreenState extends State<ProductListScreen> {
       ),
       body: Column(
         children: [
+          // ▼▼▼ ONLY UI CHANGES START HERE ▼▼▼
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search products...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
                 filled: true,
                 fillColor: Colors.grey[100],
+                contentPadding: const EdgeInsets.symmetric(vertical: 15),
               ),
             ),
           ),
@@ -133,149 +141,119 @@ class _ProductListScreenState extends State<ProductListScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredProducts.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.shopping_bag_outlined,
-                                size: 64, color: Colors.grey[400]),
-                            const SizedBox(height: 16),
-                            Text('No products found',
-                                style: TextStyle(fontSize: 20, color: Colors.grey[600])),
-                            const SizedBox(height: 8),
-                            Text('Tap the + button to add your first product',
-                                style: TextStyle(fontSize: 14, color: Colors.grey[500])),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _filteredProducts.length,
-                        itemBuilder: (context, i) {
-                          final p = _filteredProducts[i];
-                          final imageUrl = (p['image'] as String?)?.trim();
-                          final cat = p['category'] as Map<String, dynamic>?;
-                          final categoryName = (cat?['name'] as String?) ?? '—';
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inventory_2_outlined,
+                      size: 60, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No products found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            )
+                : ListView.builder(
+              padding: const EdgeInsets.only(bottom: 20),
+              itemCount: _filteredProducts.length,
+              itemBuilder: (context, i) {
+                final p = _filteredProducts[i];
+                final imageUrl = (p['image'] as String?)?.trim();
+                final cat = p['category'] as Map<String, dynamic>?;
+                final categoryName = (cat?['name'] as String?) ?? '—';
 
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            elevation: 1,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(12),
-                              onTap: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => EditProductScreen(
-                                        productId: p['id'] as String),
-                                  ),
-                                );
-                                _loadProducts();
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: imageUrl != null && imageUrl.isNotEmpty
-                                          ? Image.network(
-                                              imageUrl,
-                                              width: 80,
-                                              height: 80,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) => Container(
-                                                width: 80,
-                                                height: 80,
-                                                color: Colors.grey[200],
-                                                child: const Icon(Icons.broken_image, color: Colors.grey),
-                                              ),
-                                            )
-                                          : Container(
-                                              width: 80,
-                                              height: 80,
-                                              color: Colors.grey[200],
-                                              child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                                            ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            p['name'] as String,
-                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Row(
-                                            children: [
-                                              _buildDetailChip('${p['price']} \$', Colors.grey[200]!),
-                                              const SizedBox(width: 6),
-                                              _buildDetailChip('Qty: ${p['quantity']}', Colors.grey[200]!),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            'Category: $categoryName',
-                                            style: const TextStyle(fontSize: 13, color: Colors.black54),
-                                          ),
-                                          Text(
-                                            'Condition: ${p['condition']}',
-                                            style: const TextStyle(fontSize: 13, color: Colors.black54),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Column(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.edit, color: Colors.blue),
-                                          onPressed: () async {
-                                            await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => EditProductScreen(
-                                                    productId: p['id'] as String),
-                                              ),
-                                            );
-                                            _loadProducts();
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete, color: Colors.red),
-                                          onPressed: () => _deleteProduct(p['id'] as String),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+                return Container(
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
+                    ],
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(12),
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        color: Colors.grey[100],
+                        child: imageUrl != null && imageUrl.isNotEmpty
+                            ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.broken_image),
+                        )
+                            : const Icon(Icons.image),
+                      ),
+                    ),
+                    title: Text(
+                      p['name'] as String,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(
+                          '${p['price']} \$ • Qty: ${p['quantity']}',
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600]),
+                        ),
+                        Text(
+                          'Category: $categoryName',
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit,
+                              color: Colors.blue),
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditProductScreen(
+                                    productId: p['id'] as String),
+                              ),
+                            );
+                            _loadProducts();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete,
+                              color: Colors.red),
+                          onPressed: () =>
+                              _deleteProduct(p['id'] as String),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
+          // ▲▲▲ ONLY UI CHANGES END HERE ▲▲▲
         ],
-      ),
-    );
-  }
-
-  Widget _buildDetailChip(String text, Color backgroundColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 12),
       ),
     );
   }

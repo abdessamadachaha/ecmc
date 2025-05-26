@@ -1,4 +1,5 @@
-import 'package:homepage/models/product.dart';
+
+import 'product.dart';
 
 class Cartitem {
   Product product;

@@ -39,7 +39,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
       setState(() => _loading = false);
     }
   }
-
   Future<void> _toggleBanUser(String userId, bool isBanned) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -56,10 +55,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
     if (confirm != true) return;
 
     try {
-      await _supabase.from('users').update({'is_banned': !isBanned}).eq('id', userId);
+      await _supabase
+          .from('users')
+          .update({'is_banned': isBanned ? false : true})
+          .eq('id', userId);
+
       setState(() {
         final user = _users.firstWhere((u) => u['id'] == userId);
-        user['is_banned'] = !isBanned;
+        user['is_banned'] = isBanned ? false : true;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -73,6 +76,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
