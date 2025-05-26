@@ -37,7 +37,10 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:homepage/Views/ProfileScreen.dart';
+import 'package:homepage/Views/admin/AdminAllOrdersPage.dart';
+import 'package:homepage/Views/admin/AdminAllProductsPage.dart';
 import 'package:homepage/Views/admin/dashbord.dart';
+import 'package:homepage/Views/admin/profile.dart';
 import 'package:homepage/Views/auth/auth_redirect.dart';
 import 'package:homepage/Views/seller/ProductList.dart';
 import 'package:homepage/Views/seller/ProfilePage.dart';
@@ -92,12 +95,15 @@ class MyApp extends StatelessWidget {
           '/login': (_) => const LoginPage(),
           '/signup': (_) => const SignUpPage(),
           '/forgot-password': (_) => const ForgotPasswordPage(),
-          // '/home': (_) =>  const Homepage(),
           '/product-list': (_) => const ProductListScreen(),
           '/add': (_) => const AddProductScreen(),
           '/profile': (_) => const ProfilePage(),
           '/orders': (_) => const SellerOrdersPage(),
           '/admin-dashboard': (_) => const AdminDashboard(),
+          '/admin-profile': (context) => const AdminProfilePage(),
+          '/all-products': (context) => AdminAllProductsPage(),
+          '/all-order-items': (context) => const AdminOrderItemsPage(),
+
         },
       
         // Optionally handle unknown routes:

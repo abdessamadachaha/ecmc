@@ -46,6 +46,7 @@ dependencies:
   path: ^1.8.3
   # Utils
   uuid: ^3.0.6
+  intl: ^0.18.1
 
 
 

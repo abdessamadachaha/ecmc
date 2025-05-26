@@ -36,7 +36,13 @@ class _CategoryPageState extends State<CategoryPage> {
 
   Future<List<dynamic>> fetchProducts() async {
     final supabase = Supabase.instance.client;
+    final currentUserId = supabase.auth.currentUser?.id;
     var query = supabase.from('product').select();
+
+    // Exclude products created by the current user
+    if (currentUserId != null) {
+      query = query.neq('id_seller', currentUserId);
+    }
 
     if (selectedCategoryIndex != 0) {
       final categoryName = categories[selectedCategoryIndex];
@@ -63,7 +69,6 @@ class _CategoryPageState extends State<CategoryPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with profile
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -103,10 +108,7 @@ class _CategoryPageState extends State<CategoryPage> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // Search bar
               TextField(
                 decoration: InputDecoration(
                   filled: true,
@@ -121,71 +123,44 @@ class _CategoryPageState extends State<CategoryPage> {
                 ),
                 onChanged: (value) => setState(() => searchQuery = value),
               ),
-
               const SizedBox(height: 16),
-
-              // Categories
               SizedBox(
                 height: 40,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: categories.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    return _buildCategoryChip(index, categories[index]);
-                  },
+                  itemBuilder: (context, index) => _buildCategoryChip(index, categories[index]),
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              // Products grid
               Expanded(
                 child: FutureBuilder<List<dynamic>>(
                   future: fetchProducts(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.black,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                       );
                     }
-
                     if (snapshot.hasError) {
                       return Center(
-                        child: Text(
-                          'Error loading products',
-                          style: TextStyle(color: Colors.red[400]),
-                        ),
+                        child: Text('Error loading products', style: TextStyle(color: Colors.red[400])),
                       );
                     }
-
                     final products = snapshot.data ?? [];
                     if (products.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.search_off,
-                              size: 60,
-                              color: Colors.grey[400],
-                            ),
+                            Icon(Icons.search_off, size: 60, color: Colors.grey[400]),
                             const SizedBox(height: 16),
-                            Text(
-                              'No products found',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[600],
-                              ),
-                            ),
+                            Text('No products found', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
                           ],
                         ),
                       );
                     }
-
                     return GridView.builder(
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
@@ -194,10 +169,7 @@ class _CategoryPageState extends State<CategoryPage> {
                         childAspectRatio: 0.75,
                       ),
                       itemCount: products.length,
-                      itemBuilder: (context, index) {
-                        final product = products[index];
-                        return _buildProductCard(product);
-                      },
+                      itemBuilder: (context, index) => _buildProductCard(products[index]),
                     );
                   },
                 ),
@@ -218,9 +190,7 @@ class _CategoryPageState extends State<CategoryPage> {
         decoration: BoxDecoration(
           color: isSelected ? Colors.black : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? Colors.black : Colors.grey[300]!,
-          ),
+          border: Border.all(color: isSelected ? Colors.black : Colors.grey[300]!),
         ),
         child: Text(
           name,
@@ -256,42 +226,26 @@ class _CategoryPageState extends State<CategoryPage> {
       },
       child: Card(
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product image
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: Stack(
-                  children: [
-                    Image.network(
-                      product['image'] ?? '',
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: Icon(
-                            Icons.image_not_supported,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: Image.network(
+                  product['image'] ?? '',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: Icon(Icons.image_not_supported, color: Colors.grey),
                     ),
-                    
-                      
-                  ],
+                  ),
                 ),
               ),
             ),
-
-            // Product details
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -299,21 +253,14 @@ class _CategoryPageState extends State<CategoryPage> {
                 children: [
                   Text(
                     product['name'] ?? '',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${product['price']} MAD',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.black),
                   ),
                 ],
               ),
