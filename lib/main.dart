@@ -36,6 +36,7 @@
 // }
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:homepage/Views/ProfileScreen.dart';
 import 'package:homepage/Views/admin/AdminAllOrdersPage.dart';
 import 'package:homepage/Views/admin/AdminAllProductsPage.dart';
@@ -46,6 +47,7 @@ import 'package:homepage/Views/seller/ProductList.dart';
 import 'package:homepage/Views/seller/ProfilePage.dart';
 import 'package:homepage/Views/seller/SellerOrdersPage.dart';
 import 'package:homepage/Views/seller/addProdact.dart';
+import 'package:homepage/config/stripe_config.dart';
 import 'package:homepage/homepage.dart';
 import 'package:homepage/providers/cart_provider.dart';
 import 'package:homepage/providers/favorite_provider.dart';
@@ -72,10 +74,14 @@ void main() async {
     anonKey: SupbaseConfig.anonKey,
   );
 
+  Stripe.publishableKey = 'pk_test_51RcVFYQPHHxt540Z3qQxq1dol2g8q4I3UtCYQDiuDGw0gNq6FTAYByqrJAPQZP6qiEAjIpnuNokQvLP1J6xVLDZe00OUMjfNwF';
+  await Stripe.instance.applySettings(); // ✅ OBLIGATOIRE !
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
