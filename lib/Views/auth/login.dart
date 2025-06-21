@@ -19,56 +19,67 @@ class _LoginPageState extends State<LoginPage> {
   String error = '';
 
   Future<void> _login() async {
-  setState(() {
-    isLoading = true;
-    error = '';
-  });
-
-  try {
-    final authResponse = await Supabase.instance.client.auth.signInWithPassword(
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
-    );
-
-    final user = authResponse.user;
-    if (user == null) throw Exception("Login failed: user is null");
-
-    final userData = await Supabase.instance.client
-        .from('users')
-        .select()
-        .eq('id', user.id)
-        .single();
-
-
-    final role = userData['role'];
-    print('🔐 Logged in as: $role');
-    final person = Person.fromMap(userData);
-
-    if (role == 'customer') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => Homepage(person: person)),
-      );
-    } else if (role == 'seller') {
-      Navigator.pushReplacementNamed(context, '/product-list');
-    } else if (role == 'admin') {
-      Navigator.pushReplacementNamed(context, '/admin-dashboard');
-    } else {
-      throw Exception('Unknown role: $role');
-    }
-
-  } catch (e) {
     setState(() {
-      error = 'Login error: ${e.toString()}';
+      isLoading = true;
+      error = '';
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error)),
-    );
-  } finally {
-    setState(() => isLoading = false);
-  }
-}
 
+    try {
+      final authResponse = await Supabase.instance.client.auth
+          .signInWithPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
+
+      final user = authResponse.user;
+      if (user == null) throw Exception("Login failed: user is null");
+
+      final userData =
+          await Supabase.instance.client
+              .from('users')
+              .select()
+              .eq('id', user.id)
+              .single();
+
+      bool ban = userData['is_banned'];
+
+      final role = userData['role'];
+      print('🔐 Logged in as: $role');
+      final person = Person.fromMap(userData);
+
+      if (role == 'customer' && ban == false) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => Homepage(person: person)),
+        );
+      } else if (role == 'seller' && ban == false) {
+        Navigator.pushReplacementNamed(context, '/product-list');
+      } else if (role == 'admin') {
+        Navigator.pushReplacementNamed(context, '/admin-dashboard');
+      } else if (ban == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 1),
+            backgroundColor: Colors.red,
+            content: Text(
+              'Your account is banned',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        error = 'Login error: ${e.toString()}';
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +119,10 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Email Address', style: TextStyle(fontSize: 16, color: Colors.black87)),
+                  const Text(
+                    'Email Address',
+                    style: TextStyle(fontSize: 16, color: Colors.black87),
+                  ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: emailController,
@@ -118,18 +132,25 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(color: Colors.grey),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Enter email';
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) return 'Invalid email';
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v))
+                        return 'Invalid email';
                       return null;
                     },
                   ),
                   const SizedBox(height: 24),
 
-                  const Text('Password', style: TextStyle(fontSize: 16, color: Colors.black87)),
+                  const Text(
+                    'Password',
+                    style: TextStyle(fontSize: 16, color: Colors.black87),
+                  ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: passwordController,
@@ -140,24 +161,41 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(color: Colors.grey),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: Colors.grey,
                         ),
-                        onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                        onPressed:
+                            () => setState(
+                              () => obscurePassword = !obscurePassword,
+                            ),
                       ),
                     ),
-                    validator: (v) => (v == null || v.length < 6) ? 'At least 6 chars' : null,
+                    validator:
+                        (v) =>
+                            (v == null || v.length < 6)
+                                ? 'At least 6 chars'
+                                : null,
                   ),
                   const SizedBox(height: 8),
 
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
-                      child: const Text('Recovery Password', style: TextStyle(color: Colors.grey)),
+                      onPressed:
+                          () =>
+                              Navigator.pushNamed(context, '/forgot-password'),
+                      child: const Text(
+                        'Recovery Password',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -173,9 +211,18 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Sign In', style: TextStyle(fontSize: 16, color: Colors.white)),
+                      child:
+                          isLoading
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : const Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -183,14 +230,20 @@ class _LoginPageState extends State<LoginPage> {
                   Center(
                     child: TextButton(
                       onPressed: () => Navigator.pushNamed(context, '/signup'),
-                      child: const Text('New User? Create Account', style: TextStyle(color: Colors.black)),
+                      child: const Text(
+                        'New User? Create Account',
+                        style: TextStyle(color: Colors.black),
+                      ),
                     ),
                   ),
 
                   if (error.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
-                      child: Text(error, style: const TextStyle(color: Colors.red)),
+                      child: Text(
+                        error,
+                        style: const TextStyle(color: Colors.red),
+                      ),
                     ),
                 ],
               ),

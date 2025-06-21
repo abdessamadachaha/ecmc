@@ -37,12 +37,19 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _initAll();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _quantityController.dispose();
+    super.dispose();
+  }
+
   Future<void> _initAll() async {
     try {
-      await Future.wait([
-        _loadCategories(),
-        _loadProduct(),
-      ]);
+      await _loadCategories(); // Ensure categories load first
+      await _loadProduct();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to load data: $e")),
@@ -76,9 +83,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
       _condition = data['condition'];
       _imageUrl = data['image'];
       final catId = data['id_category'] as int;
-      _selectedCategoryName = _categoryMap.entries
-          .firstWhere((e) => e.value == catId, orElse: () => const MapEntry('', 0))
-          .key;
+
+      if (_categoryMap.containsValue(catId)) {
+        _selectedCategoryName = _categoryMap.entries
+            .firstWhere((e) => e.value == catId)
+            .key;
+      }
     }
   }
 
@@ -89,7 +99,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (xfile == null) return;
 
     setState(() => _isUploading = true);
-    
+
     try {
       final fileBytes = await xfile.readAsBytes();
       final ext = p.extension(xfile.path);
@@ -152,10 +162,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (_loading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Edit Product', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text('Edit Product',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           elevation: 0,
+          centerTitle: true,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -163,13 +175,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Product', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Edit Product',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
@@ -182,95 +196,94 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     GestureDetector(
                       onTap: _pickImageAndUpload,
                       child: Container(
-                        width: 180,
-                        height: 180,
+                        width: 150,
+                        height: 150,
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey[300]!),
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.grey[300]!,
+                            width: 1.5,
+                            style: BorderStyle.solid,
+                          ),
                         ),
                         child: _imageUrl == null
                             ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.photo_camera,
-                                      size: 40, color: Colors.grey[600]),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Update Product Image',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              )
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_a_photo,
+                                size: 40, color: Colors.grey[400]),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Add Product Image',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        )
                             : ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Stack(
-                                  children: [
-                                    Image.network(
-                                      _imageUrl!,
-                                      width: 180,
-                                      height: 180,
-                                      fit: BoxFit.cover,
-                                      loadingBuilder: (context, child, progress) {
-                                        return progress == null
-                                            ? child
-                                            : Center(child: CircularProgressIndicator());
-                                      },
-                                      errorBuilder: (_, __, ___) => Center(
-                                        child: Icon(Icons.error, color: Colors.grey[600]),
-                                      ),
-                                    ),
-                                    if (_isUploading)
-                                      Container(
-                                        color: Colors.black54,
-                                        child: const Center(
-                                          child: CircularProgressIndicator(
-                                            valueColor: AlwaysStoppedAnimation(Colors.white),
-                                        ),
-                                      ),
-                                      ),
-                                  ],
+                          borderRadius: BorderRadius.circular(16),
+                          child: Stack(
+                            children: [
+                              Image.network(
+                                _imageUrl!,
+                                width: 150,
+                                height: 150,
+                                fit: BoxFit.cover,
+                                loadingBuilder: (context, child, progress) {
+                                  return progress == null
+                                      ? child
+                                      : Container(color: Colors.grey[100]);
+                                },
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: Colors.grey[100],
+                                  child: const Icon(Icons.error),
                                 ),
                               ),
+                              if (_isUploading)
+                                Container(
+                                  color: Colors.black54,
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     TextButton(
                       onPressed: _pickImageAndUpload,
                       child: Text(
-                        _imageUrl == null ? 'Add Image' : 'Change Image',
-                        style: const TextStyle(color: Colors.black),
+                        _imageUrl == null ? 'Upload Image' : 'Change Image',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // Product Details Section
-              Text(
-                'PRODUCT DETAILS',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[600],
-                  letterSpacing: 1.2,
-                ),
+              // Product Info
+              const Text(
+                'Product Information',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Product Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[50],
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.all(14),
                 ),
                 validator: (v) => v == null || v.isEmpty ? 'Required' : null,
               ),
@@ -279,12 +292,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 controller: _descriptionController,
                 decoration: InputDecoration(
                   labelText: 'Description',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[50],
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.all(14),
                 ),
                 maxLines: 3,
                 validator: (v) => v == null || v.isEmpty ? 'Required' : null,
@@ -298,17 +307,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     child: DropdownButtonFormField<String>(
                       decoration: InputDecoration(
                         labelText: 'Category',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[50],
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                       ),
                       isExpanded: true,
-                      value: _categories.any((cat) => cat['name'] == _selectedCategoryName)
-                          ? _selectedCategoryName
-                          : null,
+                      value: _selectedCategoryName,
                       items: _categories.map((cat) {
                         return DropdownMenuItem<String>(
                           value: cat['name'],
@@ -324,20 +327,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     child: DropdownButtonFormField<String>(
                       decoration: InputDecoration(
                         labelText: 'Condition',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[50],
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                       ),
-                      isExpanded: true,
                       value: _condition,
                       items: ['New', 'Used - Excellent', 'Used - Good']
                           .map((c) => DropdownMenuItem(
-                                value: c,
-                                child: Text(c),
-                              ))
+                        value: c,
+                        child: Text(c),
+                      ))
                           .toList(),
                       onChanged: (v) => setState(() => _condition = v),
                       validator: (v) => v == null ? 'Required' : null,
@@ -355,15 +353,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       controller: _priceController,
                       decoration: InputDecoration(
                         labelText: 'Price',
-                        prefixText: '\$ ',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[50],
+                        prefixText: '\MAD ',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        contentPadding: const EdgeInsets.all(14),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                       validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                     ),
                   ),
@@ -373,12 +368,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       controller: _quantityController,
                       decoration: InputDecoration(
                         labelText: 'Quantity',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[50],
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        contentPadding: const EdgeInsets.all(14),
                       ),
                       keyboardType: TextInputType.number,
                       validator: (v) => v == null || v.isEmpty ? 'Required' : null,
@@ -391,14 +382,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
               // Save Button
               SizedBox(
                 width: double.infinity,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: _saveChanges,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                   child: const Text(
@@ -406,6 +396,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ),

@@ -73,15 +73,9 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
       if (data == null) {
         showDialog(
           context: context,
-          builder: (_) => AlertDialog(
-            title: const Text('Customer Info'),
-            content: const Text('Customer not found.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
-              ),
-            ],
+          builder: (_) => const AlertDialog(
+            title: Text('Customer Info'),
+            content: Text('Customer not found.'),
           ),
         );
         return;
@@ -90,28 +84,16 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('Customer Info'),
+          title: const Text('👤 Customer Info'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                const Icon(Icons.person, size: 20),
-                const SizedBox(width: 8),
-                Text(data['name'] ?? '—'),
-              ]),
+              _infoRow(Icons.person, data['name'] ?? '—'),
               const SizedBox(height: 8),
-              Row(children: [
-                const Icon(Icons.email, size: 20),
-                const SizedBox(width: 8),
-                Text(data['email'] ?? '—'),
-              ]),
+              _infoRow(Icons.email, data['email'] ?? '—'),
               const SizedBox(height: 8),
-              Row(children: [
-                const Icon(Icons.phone, size: 20),
-                const SizedBox(width: 8),
-                Text(data['phone'] ?? '—'),
-              ]),
+              _infoRow(Icons.phone, data['phone'] ?? '—'),
             ],
           ),
           actions: [
@@ -124,117 +106,134 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load customer: $e')),
+        SnackBar(content: Text('⚠️ Failed to load customer: $e')),
       );
     }
+  }
+
+  Widget _infoRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.blueAccent),
+        const SizedBox(width: 8),
+        Flexible(child: Text(text)),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return SellerScaffold(
-      title: 'My Order Items',
+      title: '📦 My Orders',
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _orderItems.isEmpty
-              ? const Center(child: Text('No orders found'))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: _orderItems.length,
-                  itemBuilder: (context, index) {
-                    final item = _orderItems[index];
-                    final product = item['product'];
-                    final order = item['orders'];
-                    final imageUrl = (product['image'] ?? '').toString().trim();
-                    final rawDate = order['created_at']?.toString();
-                    final dateTime = rawDate != null ? DateTime.tryParse(rawDate) : null;
-                    final formatted = dateTime != null
-                        ? '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
-                          '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}'
-                        : '—';
+          ? const Center(child: Text('No orders found.'))
+          : ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _orderItems.length,
+        itemBuilder: (context, index) {
+          final item = _orderItems[index];
+          final product = item['product'];
+          final order = item['orders'];
+          final imageUrl = (product['image'] ?? '').toString().trim();
+          final rawDate = order['created_at']?.toString();
+          final dateTime = rawDate != null ? DateTime.tryParse(rawDate) : null;
+          final formatted = dateTime != null
+              ? '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
+              '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}'
+              : '—';
 
-                    return Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+          return Card(
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            shadowColor: Colors.blueGrey.withOpacity(0.15),
+            margin: const EdgeInsets.only(bottom: 16),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () {
+                final customerId = order['customer_id'];
+                if (customerId != null) _showCustomerInfo(customerId);
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: imageUrl.isNotEmpty
+                          ? Image.network(
+                        imageUrl,
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 40),
+                      )
+                          : Container(
+                        width: 70,
+                        height: 70,
+                        color: Colors.grey[100],
+                        child: const Icon(Icons.image, color: Colors.grey, size: 40),
                       ),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          final customerId = order['customer_id'];
-                          if (customerId != null) _showCustomerInfo(customerId);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product['name'] ?? 'Unnamed Product',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: imageUrl.isNotEmpty
-                                    ? Image.network(
-                                        imageUrl,
-                                        width: 60,
-                                        height: 60,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
-                                            const Icon(Icons.broken_image),
-                                      )
-                                    : Container(
-                                        width: 60,
-                                        height: 60,
-                                        color: Colors.grey[200],
-                                        child: const Icon(Icons.image_not_supported),
-                                      ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      product['name'] ?? 'Unnamed Product',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Wrap(
-                                      spacing: 8,
-                                      children: [
-                                        _chip('Qty: ${item['quantity']}', Colors.grey[200]!),
-                                        _chip('💰 ${item['unit_price']} \$', Colors.grey[300]!),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '📅 Ordered: $formatted',
-                                      style: const TextStyle(fontSize: 13, color: Colors.black54),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(Icons.info_outline, color: Colors.black54),
+                              _chip('📦 Qty: ${item['quantity']}', Colors.blue.shade50, Colors.blue),
+                              const SizedBox(width: 8),
+                              _chip('💰 ${item['unit_price']} \$', Colors.green.shade50, Colors.green),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                              const SizedBox(width: 6),
+                              Text(
+                                formatted,
+                                style: const TextStyle(fontSize: 13, color: Colors.black54),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    );
-                  },
+                    ),
+                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                  ],
                 ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
-  Widget _chip(String text, Color bg) {
+  Widget _chip(String text, Color bg, Color textColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 12),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textColor),
       ),
     );
   }
