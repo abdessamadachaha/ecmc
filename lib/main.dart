@@ -49,6 +49,7 @@ import 'package:homepage/Views/seller/addProdact.dart';
 import 'package:homepage/homepage.dart';
 import 'package:homepage/providers/cart_provider.dart';
 import 'package:homepage/providers/favorite_provider.dart';
+import 'package:homepage/providers/order_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -82,7 +83,8 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
-        ChangeNotifierProvider(create: (_) => CartProvider())
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider())
       ],
       child: MaterialApp(
         title: 'Your App Name',

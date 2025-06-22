@@ -15,6 +15,7 @@ class CartProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get userId => _supabase.auth.currentUser?.id;
   bool get isInitialized => _isInitialized;
+  String? get cartId =>  _cartId;
 
   Future<void> initialize() async {
     if (_isInitialized) return;

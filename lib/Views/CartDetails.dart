@@ -345,8 +345,8 @@ class _CartDetailsState extends State<CartDetails> {
       context,
       MaterialPageRoute(
         builder: (context) => OrderPage(
-          cartItems: cartItems,
-          totalAmount: totalAmount,
+          // cartItems: cartItems,
+          // totalAmount: totalAmount,
         ),
       ),
     );
