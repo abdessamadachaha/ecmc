@@ -36,6 +36,7 @@
 // }
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:homepage/Views/ProfileScreen.dart';
 import 'package:homepage/Views/admin/AdminAllOrdersPage.dart';
 import 'package:homepage/Views/admin/AdminAllProductsPage.dart';
@@ -46,6 +47,7 @@ import 'package:homepage/Views/seller/ProductList.dart';
 import 'package:homepage/Views/seller/ProfilePage.dart';
 import 'package:homepage/Views/seller/SellerOrdersPage.dart';
 import 'package:homepage/Views/seller/addProdact.dart';
+import 'package:homepage/consts.dart';
 import 'package:homepage/homepage.dart';
 import 'package:homepage/providers/cart_provider.dart';
 import 'package:homepage/providers/favorite_provider.dart';
@@ -73,7 +75,15 @@ void main() async {
     anonKey: SupbaseConfig.anonKey,
   );
 
+  await _setUp();
+
   runApp(const MyApp());
+}
+
+Future<void> _setUp() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = stripePublishableKey;
+  
 }
 
 class MyApp extends StatelessWidget {
@@ -84,12 +94,12 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => FavoriteProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => OrderProvider())
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
       ],
       child: MaterialApp(
         title: 'Your App Name',
         debugShowCheckedModeBanner: false,
-      
+
         // 3️⃣ Start your user at the login screen:
         initialRoute: '/login',
         routes: {
@@ -105,14 +115,11 @@ class MyApp extends StatelessWidget {
           '/admin-profile': (context) => const AdminProfilePage(),
           '/all-products': (context) => AdminAllProductsPage(),
           '/all-order-items': (context) => const AdminOrderItemsPage(),
-
         },
-      
+
         // Optionally handle unknown routes:
         onUnknownRoute: (settings) {
-          return MaterialPageRoute(
-            builder: (_) => const LoginPage(),
-          );
+          return MaterialPageRoute(builder: (_) => const LoginPage());
         },
       ),
     );

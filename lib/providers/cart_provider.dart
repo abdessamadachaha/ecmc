@@ -17,6 +17,11 @@ class CartProvider extends ChangeNotifier {
   bool get isInitialized => _isInitialized;
   String? get cartId =>  _cartId;
 
+//   double getTotalPrice() {
+//   return cart.fold(0.0, (sum, item) => sum + item.product.price * item.quantity);
+// }
+
+
   Future<void> initialize() async {
     if (_isInitialized) return;
     
