@@ -7,10 +7,10 @@ class StripeService {
 
   static final StripeService instance = StripeService._();
 
-  Future<bool> makePayment() async {
+  Future<bool> makePayment({required double amount}) async {
   try {
     String? paymentIntentClientSecret = await _createPaymentIntent(
-      10,
+      amount.toInt(),
       'MAD',
     );
     if (paymentIntentClientSecret == null) return false;

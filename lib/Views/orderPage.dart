@@ -45,6 +45,7 @@ class OrderPage extends StatelessWidget {
       textStyle: const TextStyle(fontSize: 18),
     ),
     onPressed: () async {
+    final totalPrice = orderProvider.calculateTotalPrice(cartProvider.cart);
   final userId = cartProvider.userId;
   final cartId = cartProvider.cartId;
 
@@ -56,7 +57,7 @@ class OrderPage extends StatelessWidget {
   }
 
   try {
-    final isPaid = await StripeService.instance.makePayment();
+    final isPaid = await StripeService.instance.makePayment(amount: totalPrice);
 
     if (isPaid) {
       await orderProvider.placeOrder(

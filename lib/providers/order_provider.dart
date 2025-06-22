@@ -12,6 +12,7 @@ class OrderProvider extends ChangeNotifier {
   _isLoading = true;
   notifyListeners();
 
+
   try {
     final totalPrice = items.fold<double>(
       0.0,
@@ -27,6 +28,9 @@ class OrderProvider extends ChangeNotifier {
     }).select().single();
 
     final orderId = orderResponse['id'];
+
+
+
 
     for (final item in items) {
       await _supabase.from('order_item').insert({
@@ -50,5 +54,9 @@ class OrderProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+  double calculateTotalPrice(List<Cartitem> cart) {
+    return cart.fold(0.0, (sum, item) => sum + (item.product.price * item.quantity));
+  }
 
 }
