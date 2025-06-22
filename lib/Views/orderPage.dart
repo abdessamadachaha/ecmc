@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:homepage/Views/successPayment.dart';
 import 'package:homepage/providers/cart_provider.dart';
 import 'package:homepage/providers/order_provider.dart';
 import 'package:homepage/services/stripe_service.dart';
@@ -68,15 +69,13 @@ class OrderPage extends StatelessWidget {
 
       await cartProvider.clearCart();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Order placed and paid successfully'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (context) =>  PaymentSuccessPage()),
+);
 
-      Navigator.pop(context);
+
+      // Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
