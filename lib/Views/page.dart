@@ -204,70 +204,94 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Detailsscreen(
-              product: Product(
-                id: product['id'],
-                nameOfProduct: product['name'],
-                image: product['image'],
-                price: product['price'],
-                description: product['description'],
-                condition: product['condition'],
-                quantity: product['quantity'],
-                idSeller: product['id_seller'],
-              ),
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Detailsscreen(
+            product: Product(
+              id: product['id'],
+              nameOfProduct: product['name'],
+              image: product['image'],
+              price: product['price'],
+              description: product['description'],
+              condition: product['condition'],
+              quantity: product['quantity'],
+              idSeller: product['id_seller'],
             ),
           ),
-        );
-      },
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.network(
-                  product['image'] ?? '',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: Icon(Icons.image_not_supported, color: Colors.grey),
+        ),
+      );
+    },
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product Image
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Container(
+              height: 120,
+              width: double.infinity,
+              color: Colors.grey[100],
+              child: product['image'] != null 
+                  ? Image.network(
+                      product['image'],
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Center(
+                        child: Icon(Icons.image_not_supported, color: Colors.grey[400]),
+                      ),
+                    )
+                  : Center(
+                      child: Icon(Icons.image, color: Colors.grey[400]),
                     ),
+            ),
+          ),
+          // Product Info
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product Title
+                Text(
+                  product['name'] ?? 'No Name',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                // Price with orange accent
+                Text(
+                  '${product['price']} MAD',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFFF8C42), // Deep orange color
                   ),
                 ),
-              ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product['name'] ?? '',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${product['price']} MAD',
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.black),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
