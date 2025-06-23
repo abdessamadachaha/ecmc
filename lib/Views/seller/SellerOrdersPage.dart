@@ -13,11 +13,13 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
   final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _orderItems = [];
   bool _isLoading = true;
+  Map<String, dynamic>? _userData;
 
   @override
   void initState() {
     super.initState();
     _loadSellerOrders();
+    _loadSellerInfo();
   }
 
   Future<void> _loadSellerOrders() async {
@@ -59,6 +61,23 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
       );
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadSellerInfo() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    final data = await _supabase
+        .from('users')
+        .select()
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (mounted && data != null) {
+      setState(() {
+        _userData = data;
+      });
     }
   }
 
@@ -121,109 +140,6 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SellerScaffold(
-      title: '📦 My Orders',
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _orderItems.isEmpty
-          ? const Center(child: Text('No orders found.'))
-          : ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _orderItems.length,
-        itemBuilder: (context, index) {
-          final item = _orderItems[index];
-          final product = item['product'];
-          final order = item['orders'];
-          final imageUrl = (product['image'] ?? '').toString().trim();
-          final rawDate = order['created_at']?.toString();
-          final dateTime = rawDate != null ? DateTime.tryParse(rawDate) : null;
-          final formatted = dateTime != null
-              ? '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
-              '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}'
-              : '—';
-
-          return Card(
-            elevation: 3,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            shadowColor: Colors.blueGrey.withOpacity(0.15),
-            margin: const EdgeInsets.only(bottom: 16),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () {
-                final customerId = order['customer_id'];
-                if (customerId != null) _showCustomerInfo(customerId);
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: imageUrl.isNotEmpty
-                          ? Image.network(
-                        imageUrl,
-                        width: 70,
-                        height: 70,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 40),
-                      )
-                          : Container(
-                        width: 70,
-                        height: 70,
-                        color: Colors.grey[100],
-                        child: const Icon(Icons.image, color: Colors.grey, size: 40),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product['name'] ?? 'Unnamed Product',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              _chip('📦 Qty: ${item['quantity']}', Colors.blue.shade50, Colors.blue),
-                              const SizedBox(width: 8),
-                              _chip('💰 ${item['unit_price']} \$', Colors.green.shade50, Colors.green),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                              const SizedBox(width: 6),
-                              Text(
-                                formatted,
-                                style: const TextStyle(fontSize: 13, color: Colors.black54),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   Widget _chip(String text, Color bg, Color textColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -235,6 +151,112 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
         text,
         style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textColor),
       ),
+    );
+  }
+
+  Widget _buildOrderItem(BuildContext context, int index) {
+    final item = _orderItems[index];
+    final product = item['product'];
+    final order = item['orders'];
+    final imageUrl = (product['image'] ?? '').toString().trim();
+    final rawDate = order['created_at']?.toString();
+    final dateTime = rawDate != null ? DateTime.tryParse(rawDate) : null;
+    final formatted = dateTime != null
+        ? '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
+          '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}'
+        : '—';
+
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shadowColor: Colors.blueGrey.withOpacity(0.15),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          final customerId = order['customer_id'];
+          if (customerId != null) _showCustomerInfo(customerId);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 40),
+                      )
+                    : Container(
+                        width: 70,
+                        height: 70,
+                        color: Colors.grey[100],
+                        child: const Icon(Icons.image, color: Colors.grey, size: 40),
+                      ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product['name'] ?? 'Unnamed Product',
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _chip('📦 Qty: ${item['quantity']}', Colors.blue.shade50, Colors.blue),
+                        const SizedBox(width: 8),
+                        _chip('💰 ${item['unit_price']} \$', Colors.green.shade50, Colors.green),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text(formatted, style: const TextStyle(fontSize: 13, color: Colors.black54)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_userData == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return SellerScaffold(
+      title: '📦 My Orders',
+      sellerName: _userData!['name'] ?? 'Seller',
+      sellerEmail: _userData!['email'] ?? 'email@domain.com',
+      sellerImageUrl: _userData!['image'], // اختياري
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _orderItems.isEmpty
+              ? const Center(child: Text('No orders found.'))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _orderItems.length,
+                  itemBuilder: _buildOrderItem,
+                ),
     );
   }
 }

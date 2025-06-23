@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'SellerScaffold.dart'; // Assurez-vous que le chemin est correct
+import 'SellerScaffold.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -49,8 +49,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   ImageProvider? _getAvatar() {
     if (_imageFile != null) return FileImage(_imageFile!);
-    if (_user?['avatar_url'] != null && _user!['avatar_url'].isNotEmpty) {
-      return NetworkImage(_user!['avatar_url']);
+    if (_user?['image'] != null && _user!['image'].isNotEmpty) {
+      return NetworkImage(_user!['image']);
     }
     return null;
   }
@@ -69,11 +69,14 @@ class _ProfilePageState extends State<ProfilePage> {
       await _supabase.storage.from('avatars').uploadBinary(filePath, await file.readAsBytes());
       final url = _supabase.storage.from('avatars').getPublicUrl(filePath);
 
-      await _supabase.from('users').update({'avatar_url': url}).eq('id', _user!['id']);
+      await _supabase.from('users').update({'image': url}).eq('id', _user!['id']);
       setState(() {
         _imageFile = file;
-        _user!['avatar_url'] = url;
+        _user!['image'] = url;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Profile picture updated.')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
     }
@@ -98,11 +101,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
       await _supabase.from('users').update(updates).eq('id', _user!['id']);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
+        const SnackBar(content: Text('✅ Profile updated successfully')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update: $e')),
+        SnackBar(content: Text('❌ Failed to update: $e')),
       );
     }
 
@@ -120,7 +123,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Role switch failed: $e')),
+        SnackBar(content: Text('❌ Role switch failed: $e')),
       );
     }
 
@@ -144,12 +147,17 @@ class _ProfilePageState extends State<ProfilePage> {
     if (_user == null) {
       return SellerScaffold(
         title: 'Profile',
+        sellerName: '',
+        sellerEmail: '',
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return SellerScaffold(
       title: 'Profile',
+      sellerName: _user!['name'] ?? 'Seller',
+      sellerEmail: _user!['email'] ?? 'email@domain.com',
+      sellerImageUrl: _user!['image'],
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -202,7 +210,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 24),
 
-            // Role Switch
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -250,7 +257,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 24),
 
-            // Profile Details
             Text('PROFILE DETAILS',
                 style: TextStyle(
                     fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey[600], letterSpacing: 1.2)),

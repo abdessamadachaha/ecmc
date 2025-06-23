@@ -47,6 +47,7 @@ import 'package:homepage/Views/seller/ProductList.dart';
 import 'package:homepage/Views/seller/ProfilePage.dart';
 import 'package:homepage/Views/seller/SellerOrdersPage.dart';
 import 'package:homepage/Views/seller/addProdact.dart';
+import 'package:homepage/Views/seller/dashbord_seller.dart';
 import 'package:homepage/consts.dart';
 import 'package:homepage/homepage.dart';
 import 'package:homepage/providers/cart_provider.dart';
@@ -105,6 +106,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/redirect': (_) => const AuthRedirectPage(),
           '/login': (_) => const LoginPage(),
+          '/dashboard': (_) => const DashboardPage(),
           '/signup': (_) => const SignUpPage(),
           '/forgot-password': (_) => const ForgotPasswordPage(),
           '/product-list': (_) => const ProductListScreen(),

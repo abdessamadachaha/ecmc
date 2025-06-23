@@ -12,10 +12,10 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
-  // ▼▼▼ KEEP ALL YOUR EXISTING CODE ▼▼▼
   final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _filteredProducts = [];
+  Map<String, dynamic>? _userData;
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
 
@@ -23,6 +23,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   void initState() {
     super.initState();
     _loadProducts();
+    _loadSellerInfo();
     _searchController.addListener(_filterProducts);
   }
 
@@ -82,6 +83,23 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
   }
 
+  Future<void> _loadSellerInfo() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    final data = await _supabase
+        .from('users')
+        .select()
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (mounted && data != null) {
+      setState(() {
+        _userData = data;
+      });
+    }
+  }
+
   Future<void> _deleteProduct(String productId) async {
     try {
       await _supabase.from('favorite').delete().eq('product_id', productId);
@@ -97,15 +115,20 @@ class _ProductListScreenState extends State<ProductListScreen> {
       );
     }
   }
-  // ▲▲▲ KEEP ALL YOUR EXISTING CODE ▲▲▲
 
   @override
   Widget build(BuildContext context) {
+    if (_userData == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return SellerScaffold(
-
-
       title: 'Product Inventory',
+      sellerName: _userData!['name'] ?? 'Seller',
+      sellerEmail: _userData!['email'] ?? 'email@domain.com',
+      sellerImageUrl: _userData!['image'], // إذا كنت تستخدم الصورة في SellerScaffold
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.black,
         onPressed: () async {
@@ -119,7 +142,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
       ),
       body: Column(
         children: [
-          // ▼▼▼ ONLY UI CHANGES START HERE ▼▼▼
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -141,118 +163,115 @@ class _ProductListScreenState extends State<ProductListScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredProducts.isEmpty
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.inventory_2_outlined,
-                      size: 60, color: Colors.grey[300]),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No products found',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            )
-                : ListView.builder(
-              padding: const EdgeInsets.only(bottom: 20),
-              itemCount: _filteredProducts.length,
-              itemBuilder: (context, i) {
-                final p = _filteredProducts[i];
-                final imageUrl = (p['image'] as String?)?.trim();
-                final cat = p['category'] as Map<String, dynamic>?;
-                final categoryName = (cat?['name'] as String?) ?? '—';
-
-                return Container(
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(12),
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        width: 60,
-                        height: 60,
-                        color: Colors.grey[100],
-                        child: imageUrl != null && imageUrl.isNotEmpty
-                            ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.broken_image),
-                        )
-                            : const Icon(Icons.image),
-                      ),
-                    ),
-                    title: Text(
-                      p['name'] as String,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text(
-                          '${p['price']} \$ • Qty: ${p['quantity']}',
-                          style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[600]),
-                        ),
-                        Text(
-                          'Category: $categoryName',
-                          style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit,
-                              color: Colors.blue),
-                          onPressed: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => EditProductScreen(
-                                    productId: p['id'] as String),
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.inventory_2_outlined,
+                                size: 60, color: Colors.grey[300]),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'No products found',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
                               ),
-                            );
-                            _loadProducts();
-                          },
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete,
-                              color: Colors.red),
-                          onPressed: () =>
-                              _deleteProduct(p['id'] as String),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        itemCount: _filteredProducts.length,
+                        itemBuilder: (context, i) {
+                          final p = _filteredProducts[i];
+                          final imageUrl = (p['image'] as String?)?.trim();
+                          final cat = p['category'] as Map<String, dynamic>?;
+                          final categoryName = (cat?['name'] as String?) ?? '—';
+
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(12),
+                              leading: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  width: 60,
+                                  height: 60,
+                                  color: Colors.grey[100],
+                                  child: imageUrl != null && imageUrl.isNotEmpty
+                                      ? Image.network(
+                                          imageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              const Icon(Icons.broken_image),
+                                        )
+                                      : const Icon(Icons.image),
+                                ),
+                              ),
+                              title: Text(
+                                p['name'] as String,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${p['price']} \$ • Qty: ${p['quantity']}',
+                                    style: TextStyle(
+                                        fontSize: 13, color: Colors.grey[600]),
+                                  ),
+                                  Text(
+                                    'Category: $categoryName',
+                                    style: TextStyle(
+                                        fontSize: 13, color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit,
+                                        color: Colors.blue),
+                                    onPressed: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => EditProductScreen(
+                                              productId: p['id'] as String),
+                                        ),
+                                      );
+                                      _loadProducts();
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.red),
+                                    onPressed: () =>
+                                        _deleteProduct(p['id'] as String),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
-          // ▲▲▲ ONLY UI CHANGES END HERE ▲▲▲
         ],
       ),
     );
