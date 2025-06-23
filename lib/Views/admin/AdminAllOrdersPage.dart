@@ -100,7 +100,7 @@ class _AdminOrderItemsPageState extends State<AdminOrderItemsPage> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.indigo.shade800,
+                    color: Colors.black,
                   ),
                 ),
                 IconButton(
@@ -143,7 +143,7 @@ class _AdminOrderItemsPageState extends State<AdminOrderItemsPage> {
                 child: Text(
                   'Close',
                   style: TextStyle(
-                    color: Colors.indigo.shade800,
+                    color: Colors.black,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -167,7 +167,7 @@ Widget _buildInfoRow({
       Icon(
         icon,
         size: 20,
-        color: Colors.indigo.shade600,
+        color: Colors.black,
       ),
       const SizedBox(width: 12),
       Expanded(
@@ -201,8 +201,8 @@ Widget _buildInfoRow({
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Order Management', style: TextStyle(fontWeight: FontWeight.w600)),
-        backgroundColor: Colors.indigo.shade800,
+        title: const Text('Order Management', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
+        backgroundColor: Colors.black,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,

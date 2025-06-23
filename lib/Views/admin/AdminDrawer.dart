@@ -83,15 +83,10 @@ class AdminDrawer extends StatelessWidget {
                 _buildDrawerItem(
                   context,
                   icon: Icons.dashboard_rounded,
-                  title: 'Dashboard',
+                  title: 'All Users',
                   route: '/admin-dashboard',
                 ),
-                _buildDrawerItem(
-                  context,
-                  icon: Icons.person_outline_rounded,
-                  title: 'Profile',
-                  route: '/admin-profile',
-                ),
+                
                 _buildDrawerItem(
                   context,
                   icon: Icons.shopping_bag_outlined,
@@ -103,6 +98,12 @@ class AdminDrawer extends StatelessWidget {
                   icon: Icons.receipt_long_outlined,
                   title: 'All Orders',
                   route: '/all-order-items',
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.person_outline_rounded,
+                  title: 'Profile',
+                  route: '/admin-profile',
                 ),
                 const SizedBox(height: 10),
                 const Divider(height: 1, thickness: 1),
