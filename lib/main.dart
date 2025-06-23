@@ -106,9 +106,9 @@ class MyApp extends StatelessWidget {
         routes: {
           '/redirect': (_) => const AuthRedirectPage(),
           '/login': (_) => const LoginPage(),
-          '/dashboard': (_) => const DashboardPage(),
           '/signup': (_) => const SignUpPage(),
           '/forgot-password': (_) => const ForgotPasswordPage(),
+          '/dashboard': (_) => const DashboardPage(),
           '/product-list': (_) => const ProductListScreen(),
           '/add': (_) => const AddProductScreen(),
           '/profile': (_) => const ProfilePage(),
