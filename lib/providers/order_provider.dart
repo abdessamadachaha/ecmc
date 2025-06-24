@@ -59,4 +59,20 @@ class OrderProvider extends ChangeNotifier {
     return cart.fold(0.0, (sum, item) => sum + (item.product.price * item.quantity));
   }
 
+  Future<void> decreaseProductQuantity(String productId, int quantity) async {
+  final response = await Supabase.instance.client.rpc(
+    'decrease_product_quantity',
+    params: {
+      'p_id': productId,
+      'p_quantity': quantity,
+    },
+  );
+
+  if (response.error != null) {
+    throw Exception('Failed to update quantity: ${response.error!.message}');
+  }
+}
+
+
+
 }

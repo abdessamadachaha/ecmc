@@ -206,6 +206,13 @@ class OrderPage extends StatelessWidget {
                                   cartId,
                                   cartProvider.cart,
                                 );
+                                 for (final item in cartProvider.cart) {
+  await orderProvider.decreaseProductQuantity(
+    item.product.id,
+    item.quantity,
+  );
+}
+
 
                                 await cartProvider.clearCart();
 

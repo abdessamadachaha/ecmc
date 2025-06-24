@@ -206,9 +206,11 @@ class _CartDetailsState extends State<CartDetails> {
                         ),
                         IconButton(
                           icon: Icon(LucideIcons.plus, size: 18),
-                          onPressed: () => _updateQuantity(
-                              index, item.quantity + 1, provider),
+                          onPressed: item.quantity < item.product.quantity
+                              ? () => _updateQuantity(index, item.quantity + 1, provider)
+                              : null, 
                         ),
+
                       ],
                     ),
                   ),

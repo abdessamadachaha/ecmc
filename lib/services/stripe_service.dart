@@ -26,7 +26,7 @@ class StripeService {
     return true;
   } catch (e) {
     print('❌ Payment Error: $e');
-    return false; // ✅ أضف هذه
+    return false;
   }
 }
 
@@ -72,7 +72,7 @@ class StripeService {
     print("✅ Payment successful");
   } catch (e) {
     print("❌ Error during payment sheet: $e");
-    rethrow; // 🔁 مهم لإعادة إرسال الخطأ إلى `makePayment`
+    rethrow; 
   }
 }
 

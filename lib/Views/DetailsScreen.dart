@@ -327,22 +327,41 @@ class _DetailsscreenState extends State<Detailsscreen> {
 
 
 
-                  Button(
-                    text: 'Add To Cart',
-                    onTap: () async {
-                      await providerCart.addToCart(
-                        Cartitem(product: widget.product, quantity: 1),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${widget.product.nameOfProduct} Added to cart'),
-                          duration: const Duration(seconds: 2),
-                          backgroundColor: Colors.green,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                  ),
+                  // Add to cart or épuisé
+widget.product.quantity > 0
+    ? Button(
+        text: 'Add To Cart',
+        onTap: () async {
+          await providerCart.addToCart(
+            Cartitem(product: widget.product, quantity: 1),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.product.nameOfProduct} ajouté au panier'),
+              duration: const Duration(seconds: 2),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      )
+    : Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        child: ElevatedButton.icon(
+          onPressed: null, // désactivé
+          icon: const Icon(Icons.block, color: Colors.white),
+          label: const Text("Product out of stock"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.grey,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        ),
+      ),
+
 
                 ],
               ),
