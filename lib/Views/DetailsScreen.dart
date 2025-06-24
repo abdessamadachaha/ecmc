@@ -23,11 +23,32 @@ class _DetailsscreenState extends State<Detailsscreen> {
 
   bool isLoading = true;
 
+  final TextEditingController _commentController = TextEditingController();
+  List<Map<String, dynamic>> _reviews = [];
+  bool _loadingReviews = true;
+
+
   @override
   void initState() {
     super.initState();
     fetchSellerInfo();
+    fetchReviews();
   }
+
+  Future<void> fetchReviews() async {
+    setState(() => _loadingReviews = true);
+    final data = await Supabase.instance.client
+        .from('review')
+        .select('comment, created_at, users(name)')
+        .eq('product_id', widget.product.id)
+        .order('created_at', ascending: false);
+
+    setState(() {
+      _reviews = data;
+      _loadingReviews = false;
+    });
+  }
+
 
   void fetchSellerInfo() async {
     try {
@@ -48,6 +69,27 @@ class _DetailsscreenState extends State<Detailsscreen> {
       });
     }
   }
+
+  Future<void> addComment() async {
+    final comment = _commentController.text.trim();
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+
+    if (comment.isNotEmpty && userId != null) {
+      await Supabase.instance.client.from('review').insert({
+        'product_id': widget.product.id,
+        'user_id': userId,
+        'comment': comment,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      _commentController.clear();
+      fetchReviews(); // rafraîchir
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Commentaire ajouté')),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -165,6 +207,125 @@ class _DetailsscreenState extends State<Detailsscreen> {
                               ],
                             ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '📝 Laisser un commentaire',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _commentController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: 'Écris ton avis ici...',
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.all(12),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton.icon(
+                            onPressed: addComment,
+                            icon: const Icon(Icons.send , color: Colors.white,),
+                            label: const Text("Envoyer"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '💬 Commentaires récents',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        const SizedBox(height: 8),
+                        _loadingReviews
+                            ? const Center(child: CircularProgressIndicator())
+                            : _reviews.isEmpty
+                            ? const Text('Aucun commentaire pour ce produit.')
+                            : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _reviews.length,
+                          itemBuilder: (context, index) {
+                            final review = _reviews[index];
+                            final user = review['users']?['name'] ?? 'Utilisateur';
+                            final comment = review['comment'];
+                            final date = DateTime.parse(review['created_at'])
+                                .toLocal()
+                                .toString()
+                                .substring(0, 16);
+
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 1,
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          user,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        Text(
+                                          date,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      comment,
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+
 
                   Button(
                     text: 'Add To Cart',

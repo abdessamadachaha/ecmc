@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:homepage/models/CartItem.dart';
+import 'package:homepage/models/person.dart';
+import 'package:homepage/homepage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OrderPage extends StatelessWidget {
   final List<Cartitem> cartItems;
@@ -14,12 +17,12 @@ class OrderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Light background
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Order Summary', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
-        elevation: 0,
         backgroundColor: Colors.transparent,
+        elevation: 0,
         foregroundColor: Colors.black,
       ),
       body: Padding(
@@ -27,35 +30,18 @@ class OrderPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Section: Order Items
             const Padding(
               padding: EdgeInsets.only(top: 8, bottom: 16),
-              child: Text(
-                'Your Order',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
+              child: Text('Your Order', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             ),
-            
-            // Order Items List
             Expanded(
               child: cartItems.isEmpty
                   ? const Center(child: Text('Your cart is empty', style: TextStyle(color: Colors.grey)))
-                  : ListView.separated(
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: cartItems.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final item = cartItems[index];
-                        return _buildOrderItem(item, context);
-                      },
-                    ),
+                  : ListView.builder(
+                itemCount: cartItems.length,
+                itemBuilder: (context, index) => _buildOrderItem(cartItems[index]),
+              ),
             ),
-
-            // Total & Payment Section
             _buildTotalAndPayment(context),
           ],
         ),
@@ -63,69 +49,33 @@ class OrderPage extends StatelessWidget {
     );
   }
 
-  // --- Helper Widgets ---
-
-  Widget _buildOrderItem(Cartitem item, BuildContext context) {
+  Widget _buildOrderItem(Cartitem item) {
     return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            // Product Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                item.product.image,
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  width: 60,
-                  height: 60,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.image, color: Colors.grey),
-                ),
-              ),
+              child: Image.network(item.product.image, width: 60, height: 60, fit: BoxFit.cover),
             ),
             const SizedBox(width: 16),
-            
-            // Product Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    item.product.nameOfProduct,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  Text(item.product.nameOfProduct, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
-                  Text(
-                    'Qty: ${item.quantity}',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
+                  Text('Qty: ${item.quantity}', style: const TextStyle(color: Colors.grey)),
                 ],
               ),
             ),
-            
-            // Price
             Text(
               '${(item.product.price * item.quantity).toStringAsFixed(2)} MAD',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepOrange,
-              ),
-            ),
+              style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold),
+            )
           ],
         ),
       ),
@@ -138,124 +88,87 @@ class OrderPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
       ),
       child: Column(
         children: [
-          // Total Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Total',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              Text(
-                '${totalAmount.toStringAsFixed(2)} MAD',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepOrange,
-                ),
-              ),
+              const Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              Text('${totalAmount.toStringAsFixed(2)} MAD', style: const TextStyle(color: Colors.deepOrange, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 24),
-          
-          // Payment Button
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () {
-                // Payment Confirmation
-                _showPaymentSuccessDialog(context);
-              },
-              child: const Text(
-                'Confirm & Pay',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-          ),
+            onPressed: () => _processPayment(context),
+            child: const Center(child: Text('Confirm & Pay', style: TextStyle(fontWeight: FontWeight.bold))),
+          )
         ],
       ),
     );
   }
 
-  void _showPaymentSuccessDialog(BuildContext context) {
+  void _processPayment(BuildContext context) async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+
+      if (userId == null) {
+        _showDialog(context, false, null);
+        return;
+      }
+
+      final data = await Supabase.instance.client
+          .from('users')
+          .select()
+          .eq('id', userId)
+          .single();
+
+      final user = Person.fromMap(data);
+
+      // Afficher le dialogue de succès
+      _showDialog(context, true, user);
+
+    } catch (e) {
+      _showDialog(context, false, null);
+    }
+  }
+
+  void _showDialog(BuildContext context, bool isSuccess, Person? user) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(isSuccess ? Icons.check_circle : Icons.error, color: isSuccess ? Colors.green : Colors.red),
+            const SizedBox(width: 10),
+            Text(isSuccess ? 'Payment Successful' : 'Payment Failed'),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 60),
-              const SizedBox(height: 16),
-              const Text(
-                'Payment Successful!',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${totalAmount.toStringAsFixed(2)} MAD has been processed',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    backgroundColor: Colors.black.withOpacity(0.1),
-                  ),
-                  onPressed: () {
-                    Navigator.pop(context); // Close dialog
-                    Navigator.pop(context); // Return to previous screen
-                  },
-                  child: const Text(
-                    'Continue Shopping',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+        content: Text(
+          isSuccess ? '${totalAmount.toStringAsFixed(2)} MAD processed successfully' : 'Payment failed. Please try again.',
         ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Fermer le dialogue
+              if (isSuccess && user != null) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => Homepage(person: user!)),
+                      (route) => false,
+                );
+              }
+            },
+            child: Text(isSuccess ? 'Continue Shopping' : 'Back'),
+          )
+        ],
       ),
     );
   }

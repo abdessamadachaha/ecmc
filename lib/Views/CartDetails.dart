@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:homepage/Views/orderPage.dart';
 import 'package:homepage/models/CartItem.dart';
 import 'package:homepage/providers/cart_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../homepage.dart';
+import '../models/person.dart';
 
 class CartDetails extends StatefulWidget {
   const CartDetails({super.key});
@@ -330,33 +335,135 @@ class _CartDetailsState extends State<CartDetails> {
   }
 
   Future<void> _checkout() async {
-  final provider = Provider.of<CartProvider>(context, listen: false);
-  final cartItems = provider.cart;
-  final totalAmount = cartItems.fold(
-    0.0,
-    (sum, item) => sum + (item.product.price * item.quantity),
-  );
+    final provider = Provider.of<CartProvider>(context, listen: false);
+    final cartItems = provider.cart;
+    final totalAmount = cartItems.fold(
+      0.0,
+          (sum, item) => sum + (item.product.price * item.quantity),
+    );
 
-  setState(() => _isProcessing = true);
+    setState(() => _isProcessing = true);
 
-  try {
-    // الانتقال إلى صفحة الدفع
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OrderPage(
-          cartItems: cartItems,
-          totalAmount: totalAmount,
+    try {
+      // 1. Appeler la Function Supabase
+      final response = await Supabase.instance.client.functions.invoke(
+        'smooth-function',
+        body: {'amount': totalAmount},
+      );
+
+      final clientSecret = response.data['clientSecret'];
+
+      // 2. Initialiser Stripe Payment Sheet
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'ECMC',
+          style: ThemeMode.light,
         ),
-      ),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Checkout failed: ${e.toString()}')),
-    );
-  } finally {
-    setState(() => _isProcessing = false);
+      );
+
+      // 3. Afficher le formulaire de paiement
+      await Stripe.instance.presentPaymentSheet();
+
+      // 4. Insérer dans la base de données
+      final userId = provider.userId;
+      final cartId = await provider.getCurrentCartId(userId);
+      final timestamp = DateTime.now().toIso8601String();
+
+      final orderResponse = await Supabase.instance.client
+          .from('orders')
+          .insert({
+        'customer_id': userId,
+        'cart_id': cartId,
+        'created_at': timestamp,
+        'total_price': totalAmount,
+      })
+          .select()
+          .single();
+
+      final orderId = orderResponse['id'];
+
+      for (final item in cartItems) {
+        await Supabase.instance.client.from('order_item').insert({
+          'order_id': orderId,
+          'product_id': item.product.id,
+          'quantity': item.quantity,
+          'unit_price': item.product.price,
+          'seller_id': item.product.idSeller,
+        });
+      }
+
+      await provider.clearCart(); // 🧹 Vider le panier
+
+     // final userId = Supabase.instance.client.auth.currentUser?.id;
+
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("❌ Utilisateur non connecté")),
+        );
+        return;
+      }
+
+      final userData = await Supabase.instance.client
+          .from('users')
+          .select()
+          .eq('id', userId)
+          .maybeSingle(); // ← évite l’erreur si pas trouvé
+
+      if (userData == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("⚠️ Utilisateur non trouvé dans la base")),
+        );
+        return;
+      }
+
+      final currentUser = Person.fromMap(userData);
+      // 6. Afficher la boîte de dialogue
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 60),
+                const SizedBox(height: 16),
+                const Text(
+                  '✅ Paiement réussi',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${totalAmount.toStringAsFixed(2)} MAD a été traité avec succès.',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Ferme le dialog
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => Homepage(person: currentUser)),
+                          (route) => false,
+                    );
+                  },
+                  child: const Text('Continuer vos achats'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Paiement échoué : $e')),
+      );
+    } finally {
+      setState(() => _isProcessing = false);
+    }
   }
-}
+
 
 }

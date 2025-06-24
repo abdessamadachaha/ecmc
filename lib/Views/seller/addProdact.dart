@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -7,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({Key? key}) : super(key: key);
+
 
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();
@@ -19,9 +22,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
 
+   String baseUrl = 'https://backend-deepseek-production.up.railway.app';
+  final TextEditingController _titleController = TextEditingController();
+  String? _selectedCondition;
+
+
+
+
   final sellerId = Supabase.instance.client.auth.currentUser?.id;
 
-  String? _condition;
+  String? _condition = 'New';
   String? _imageUrl;
   bool _isUploading = false;
 
@@ -35,6 +45,38 @@ class _AddProductScreenState extends State<AddProductScreen> {
     super.initState();
     _loadCategories();
   }
+
+  Future<String?> generateDescription(String title, String condition) async {
+    final url = Uri.parse('https://backend-deepseek-production.up.railway.app/generate-description');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'title': title, 'condition': condition}),
+      );
+
+      print('🔵 Status Code: ${response.statusCode}');
+      print('🟡 Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('✅ Description reçue : ${data['description']}'); // <-- ICI tu vois le contenu
+        return data['description']; // Ici Flutter récupère le texte pour remplir le champ
+      } else {
+        print('❌ Erreur HTTP: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('❌ Exception lors de la requête: $e');
+      return null;
+    }
+  }
+
+
+
+
+
 
   Future<void> _loadCategories() async {
     setState(() => _isLoadingCategories = true);
@@ -131,6 +173,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
   }
 
   @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -217,7 +266,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _nameController,
+                controller: _titleController,
                 decoration: InputDecoration(
                   labelText: 'Product Name',
                   border: OutlineInputBorder(
@@ -229,6 +278,34 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 ),
                 validator: (v) => v == null || v.isEmpty ? 'Required' : null,
               ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () async {
+                  final title = _titleController.text.trim();
+                  final condition = _condition; // récupéré via DropdownButton
+
+                  if (title.isEmpty || condition == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Veuillez remplir tous les champs")),
+                    );
+                    return;
+                  }
+
+                  final result = await generateDescription(title, condition);
+
+                  if (result != null) {
+                    setState(() {
+                      _descriptionController.text = result;
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("❌ Échec de génération")),
+                    );
+                  }
+                },
+                child: Text('Générer une description'),
+              ),
+
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
@@ -271,34 +348,36 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                 child: Text(cat['name'] as String),
                               );
                             }).toList(),
-                            onChanged: (v) => setState(() => _selectedCategoryName = v),
+                            onChanged: (v) => setState(() {
+                            _condition = v;
+                            _selectedCondition = v;
+                            }),
                             validator: (v) => v == null ? 'Required' : null,
-                          ),
+                            ),
+
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        labelText: 'Condition',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[50],
-                      ),
-                      isExpanded: true,
-                      value: _condition,
-                      hint: const Text('Select condition'),
+                      value: _condition, // ✅ Important : définis une valeur initiale
                       items: ['New', 'Used - Excellent', 'Used - Good']
-                          .map((c) => DropdownMenuItem(
-                                value: c,
-                                child: Text(c),
-                              ))
+                          .map((c) => DropdownMenuItem<String>(
+                        value: c,
+                        child: Text(c),
+                      ))
                           .toList(),
-                      onChanged: (v) => setState(() => _condition = v),
+                      onChanged: (v) {
+                        setState(() {
+                          _condition = v!;
+                        });
+                      },
                       validator: (v) => v == null ? 'Required' : null,
+                      decoration: const InputDecoration(
+                        labelText: 'Condition',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
+
                   ),
                 ],
               ),

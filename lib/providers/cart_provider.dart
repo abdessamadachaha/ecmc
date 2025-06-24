@@ -34,6 +34,21 @@ class CartProvider extends ChangeNotifier {
     _isInitialized = true;
   }
 
+  Future<String?> getCurrentCartId(String? userId) async {
+    if (userId == null) return null;
+
+    final result = await Supabase.instance.client
+        .from('cart')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    return result?['id'] as String?;
+  }
+
+
+
   Future<void> _loadCart() async {
     try {
       _isLoading = true;

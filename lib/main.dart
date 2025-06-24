@@ -69,6 +69,11 @@ import 'Views/page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  FlutterError.onError = (FlutterErrorDetails details) {
+  FlutterError.presentError(details);
+  print('🔥 FLUTTER ERROR: ${details.exception}');
+};
+
   await Supabase.initialize(
     url: SupbaseConfig.url,
     anonKey: SupbaseConfig.anonKey,
@@ -78,6 +83,7 @@ void main() async {
   await Stripe.instance.applySettings(); // ✅ OBLIGATOIRE !
 
   runApp(const MyApp());
+
 }
 
 class MyApp extends StatelessWidget {
@@ -96,6 +102,7 @@ class MyApp extends StatelessWidget {
       
         // 3️⃣ Start your user at the login screen:
         initialRoute: '/login',
+
         routes: {
           '/redirect': (_) => const AuthRedirectPage(),
           '/login': (_) => const LoginPage(),
